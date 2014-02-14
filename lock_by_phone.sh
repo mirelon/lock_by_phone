@@ -15,12 +15,22 @@ SLEEP_TIMEOUT=30
 # command to run background job that will put computer to sleep
 DELAYED_LOCK_JOB="./delayed_lock.sh $SLEEP_TIMEOUT"
 
+#mac address of the device, for now the default is mine
+MAC_ADDRESS="8c:77:16:57:c5:2f"
+
+if [ $# -gt 0 ]
+then
+  MAC_ADDRESS=$1
+fi
+
 function install() {
   # add ip address and mac address to arp table
-  
-  sudo arp -s 192.168.2.101 8c:77:16:57:c5:2f
 
-  arp -av
+  echo "install(): adding arp entry for ip=$IP and mac=$MAC_ADDRESS"
+  
+  sudo arp -s $IP $MAC_ADDRESS
+
+  # arp -av
 }
 
 function init() {
@@ -29,6 +39,11 @@ function init() {
   echo "init(): sending arp packet to detect devices in order to find my phone"
 
   IP=`arp | grep 8c:77:16:57:c5:2f | awk '{print $1}'`
+  if [ -z $IP ]
+  then
+    echo "Run this script with two parameters, first MAC address of the device and second the IP addess in order to add an entry to local ARP table"
+    exit
+  fi
 
 }
 
@@ -73,6 +88,12 @@ function perform() {
   done
   
 }
+
+if [ $# -eq 2 ]
+then
+  IP=$2
+  install
+fi
 
 if [ -z $IP ]
 then
