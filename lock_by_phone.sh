@@ -34,6 +34,11 @@ function init() {
 
 function perform() {
   echo "perform()"
+  if [ -z $IP ]
+  then
+    echo "Do not know IP address of the device, exitting"
+    exit
+  fi
   
   # find out how many pings were successful:
 
