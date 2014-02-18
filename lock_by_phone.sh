@@ -62,24 +62,36 @@ function perform() {
     echo "pinging device with $TOTAL_PINGS pings"
     PING_OUTPUT=`ping $IP -c $TOTAL_PINGS`
     SUCCESSFUL_PINGS=`echo $PING_OUTPUT | grep transmitted | sed -e 's/.* \([0-9]*\) received.*/\1/'`
+    LOCKED=`gnome-screensaver-command -q | grep "is active"`
     if [ $SUCCESSFUL_PINGS -lt $PING_THRESHOLD ]
     then
-      echo -e "\e[33mDevice unreachable, move your mouse to prevent locking\e[0m"
-      DELAYED_LOCK_JOB_PID=`ps ax | grep -e "${DELAYED_LOCK_JOB}" | grep -v grep | awk '{print $1}'`
-      if [ -z $DELAYED_LOCK_JOB_PID ]
+      echo -e "\e[33mDevice unreachable\e[0m"
+      if [ -z "$LOCKED" ]
       then
-        echo "starting delayed lock"
-        eval ${DELAYED_LOCK_JOB} &
-      else
-        echo "delayed lock is already running with pid $DELAYED_LOCK_JOB_PID"
+        echo "Move your mouse to prevent locking"
+        DELAYED_LOCK_JOB_PID=`ps ax | grep -e "${DELAYED_LOCK_JOB}" | grep -v grep | awk '{print $1}'`
+        if [ -z $DELAYED_LOCK_JOB_PID ]
+        then
+          echo "starting delayed lock"
+          eval ${DELAYED_LOCK_JOB} &
+        else
+          echo "delayed lock is already running with pid $DELAYED_LOCK_JOB_PID"
+        fi
       fi
     else
       echo "Device OK, pings $SUCCESSFUL_PINGS/$TOTAL_PINGS"
-      DELAYED_LOCK_JOB_PID=`ps ax | grep -e "${DELAYED_LOCK_JOB}" | grep -v grep | awk '{print $1}'`
-      if [ ! -z $DELAYED_LOCK_JOB_PID ]
+      if [ -z "$LOCKED" ]
       then
-        echo "Killing a delayed lock process with pid=$DELAYED_LOCK_JOB_PID"
-        kill $DELAYED_LOCK_JOB_PID
+        DELAYED_LOCK_JOB_PID=`ps ax | grep -e "${DELAYED_LOCK_JOB}" | grep -v grep | awk '{print $1}'`
+        if [ ! -z $DELAYED_LOCK_JOB_PID ]
+        then
+          echo -e "\e[32mKilling a delayed lock process with pid=$DELAYED_LOCK_JOB_PID\e[0m"
+          kill $DELAYED_LOCK_JOB_PID
+        fi
+      else
+        echo -e "\e[32mUnlocking\e[0m"
+        gnome-screensaver-command -d
+        xset dpms force on
       fi
     fi
     
