@@ -1,16 +1,16 @@
 #!/bin/bash
 
 # pings in one batch
-TOTAL_PINGS=3
+TOTAL_PINGS=2
 
 # how many successful pings needed to consider device as reachable
 PING_THRESHOLD=1
 
 # interval between ping batches in seconds
-PING_BATCH_INTERVAL=5
+PING_BATCH_INTERVAL=4
 
 # after device unreachability detected, in seconds
-SLEEP_TIMEOUT=30
+SLEEP_TIMEOUT=20
 
 # command to run background job that will put computer to sleep
 DELAYED_LOCK_JOB="./delayed_lock.sh $SLEEP_TIMEOUT"
@@ -74,6 +74,7 @@ function perform() {
         then
           echo "starting delayed lock"
           eval ${DELAYED_LOCK_JOB} &
+          xset dpms force off
         else
           echo "delayed lock is already running with pid $DELAYED_LOCK_JOB_PID"
         fi
@@ -91,8 +92,8 @@ function perform() {
       else
         echo -e "\e[32mUnlocking\e[0m"
         gnome-screensaver-command -d
-        xset dpms force on
       fi
+      xset dpms force on
     fi
     
     
